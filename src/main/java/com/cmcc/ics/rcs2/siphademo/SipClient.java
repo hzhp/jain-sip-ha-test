@@ -203,11 +203,11 @@ public class SipClient implements SipListener {
             + "--SIP_BOUNDARY--" + SipConstant.CRLF;
 
 
-    public void sendMoMessage() {
+    public void sendMoMessage(String toSipAddress, int toPoint) {
         try {
             // Destination
-            String toSipAddress = "192.168.100.111"; // "192.168.100.100"; //
-            int toPoint = 5070;
+            //String toSipAddress = "192.168.100.111"; // "192.168.100.100"; //
+            //int toPoint = 5070;
 
             // Request-Line
             String RequestLine = "MESSAGE tel:+8614715008383 SIP/2.0";
@@ -287,6 +287,110 @@ public class SipClient implements SipListener {
 
             // Expires Header
             ExpiresHeader expiresHeader = headerFactory.createExpiresHeader(120);
+            request.addHeader(expiresHeader);
+
+            // Create the client transaction.
+            transaction = sipProvider.getNewClientTransaction(request);
+
+            // send the register request out
+            transaction.sendRequest();
+
+            System.out.println("SipClient Dialog = " + transaction.getDialog());
+            System.out.println("SipClient Transaction id: " + ((SIPClientTransaction)transaction).getTransactionId());
+            System.out.println("SipClient branch: " + transaction.getBranchId());
+            System.out.println("SIP request MESSAGE: " + request.toString());
+
+        } catch (Throwable ex) {
+            System.out.println(ex.getMessage());
+            ex.printStackTrace();
+
+        }
+    }
+
+    public void sendSubscribe(String toSipAddress, int toPoint) {
+        try {
+            // Destination
+            //String toSipAddress = "192.168.100.111"; // "192.168.100.100"; //
+            //int toPoint = 5070;
+
+            // Request-Line
+            String RequestLine = "SUBSCRIBE tel:+8614715008383 SIP/2.0";
+            //String RequestURI = "+8614715008380@ims.mnc008.mcc460.3gppnetwork.org";
+            SipURI requestURI = addressFactory.createSipURI(null, RequestLine);
+            requestURI.setHost(toSipAddress);
+            requestURI.setPort(toPoint);
+
+            // Message Header
+            // From Header, tag == null
+            String fromSipAddress = "+8613400030074";
+            TelURL from = addressFactory.createTelURL(fromSipAddress);
+            Address fromNameAddress = addressFactory.createAddress(from);
+            System.out.println("fromNameAddress is " + fromNameAddress.toString());
+            FromHeader fromHeader = headerFactory.createFromHeader(fromNameAddress, "123456");
+
+            // To Header (Register ToHeader is different)
+            String toTel = "<sip:+8613904080@ims.mnc008.mcc460.3gppnetwork.org>";
+            ToHeader toHeader = (ToHeader) headerFactory.createHeader("To", toTel);
+            //SipURI toAddress = addressFactory.createSipURI(null, toTel);
+            //Address toNameAddress = addressFactory.createAddress(toAddress);
+            //ToHeader toHeader = headerFactory.createToHeader(toNameAddress, toTel);
+
+            // Call-ID Header
+            //CallIdHeader callIdHeader = sipProvider.getNewCallId();
+            CallIdHeader callIdHeader = headerFactory.createCallIdHeader("1234567890112233");
+            System.out.println("Call-ID header: " + callIdHeader.toString());
+
+            // CSeq Header
+            CSeqHeader cSeqHeader = headerFactory.createCSeqHeader(1L, Request.SUBSCRIBE);
+
+            // Max_Forwards Header
+            MaxForwardsHeader maxForwardsHeader = headerFactory.createMaxForwardsHeader(68);
+
+            //P-Access-Network_Info
+            //PAccessNetworkInfoHeader pAccessNetworkInfoHeader =
+
+            // Content-Type Header
+            String contentType = "message";
+            String subType = "cpim";
+            ContentTypeHeader contentTypeHeader = headerFactory.createContentTypeHeader(contentType,
+                    subType);
+
+            // Via Header
+            ArrayList<ViaHeader> viaHeaders = new ArrayList<ViaHeader>();
+            String host = sipProvider.getListeningPoint(transport).getIPAddress();
+            int port = sipProvider.getListeningPoint(transport).getPort();
+            ViaHeader viaHeader = headerFactory.createViaHeader(host, port, transport, null);
+            viaHeader.setBranch("z9hG4bK*1-1-16648-863-15-235*B_2NK8Y91cdjffef.1");
+            viaHeaders.add(viaHeader);
+
+            // Create the request
+            Request request = messageFactory.createRequest(requestURI, Request.SUBSCRIBE,
+                    callIdHeader, cSeqHeader, fromHeader, toHeader, viaHeaders, maxForwardsHeader);
+
+            // Create contact headers
+            SipURI contactUrl = addressFactory.createSipURI(null, host);
+            contactUrl.setPort(port);
+            Address contactAddress = addressFactory.createAddress(contactUrl);
+            contactHeader = headerFactory.createContactHeader(contactAddress);
+            request.addHeader(contactHeader);
+
+            // Add Content with contentType
+            request.addHeader(contentTypeHeader);
+            byte[] moMessageContent = messageCpimContent.getBytes();
+            request.setContent(moMessageContent, contentTypeHeader);
+
+            // Contribution-ID Header
+            Header contributionId = headerFactory.createHeader(SipConstant.CCSIP_NAME_CONTRIBUTION_ID,
+                    "WWdcb4-Brjos7Tzx");
+            request.addHeader(contributionId);
+
+            // Conversation-ID Header
+            Header conversationId = headerFactory.createHeader(SipConstant.CCSIP_NAME_CONVERSATION_ID,
+                    "JVdcb4-Brjos7Tzx");
+            request.addHeader(conversationId);
+
+            // Expires Header
+            ExpiresHeader expiresHeader = headerFactory.createExpiresHeader(3600);
             request.addHeader(expiresHeader);
 
             // Create the client transaction.

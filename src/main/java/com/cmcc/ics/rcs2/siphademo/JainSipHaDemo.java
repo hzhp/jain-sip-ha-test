@@ -33,6 +33,7 @@ import javax.sip.header.CSeqHeader;
 import javax.sip.header.CallIdHeader;
 import javax.sip.header.ContactHeader;
 import javax.sip.header.ContentTypeHeader;
+import javax.sip.header.ExpiresHeader;
 import javax.sip.header.FromHeader;
 import javax.sip.header.HeaderFactory;
 import javax.sip.header.MaxForwardsHeader;
@@ -91,6 +92,9 @@ public class JainSipHaDemo {
         private boolean dialogRemoved = false;
 
         private ReplicationStrategy replicationStrategy;
+
+        int countSipMsgMessage = 0;
+        int countSipMsgSubscribe = 0;
 
         public Shootme(String stackName, String cacheName, int myPort, boolean immediateAnswer) {
             this.stackName = stackName;
@@ -166,6 +170,8 @@ public class JainSipHaDemo {
                 processCancel(requestEvent, serverTransactionId);
             } else if (request.getMethod().equals(Request.MESSAGE)) {
                 processMessage(requestEvent, serverTransactionId);
+            } else if (request.getMethod().equals(Request.SUBSCRIBE)) {
+                processSubscribe(requestEvent, serverTransactionId);
             } else {
                 try {
                     serverTransactionId.sendResponse(messageFactory
@@ -221,8 +227,8 @@ public class JainSipHaDemo {
         }
         // <hpai
         public void processMessage(RequestEvent requestEvent, ServerTransaction serverTransactionId) {
-
-
+            countSipMsgMessage = countSipMsgMessage + 1;
+            System.out.println("%%%receive SIP MESSAGE count: " + countSipMsgMessage);
             try {
                 Response response = messageFactory.createResponse(Response.ACCEPTED, requestEvent.getRequest());
 
@@ -251,6 +257,52 @@ public class JainSipHaDemo {
                 System.out.println(e.toString());
             }
 
+        }
+
+        public void processSubscribe(RequestEvent requestEvent, ServerTransaction serverTransactionId) {
+            countSipMsgSubscribe = countSipMsgSubscribe + 1;
+            System.out.println("%%%receive SIP SUBSCRIBE count: " + countSipMsgSubscribe);
+            try {
+                Response response = messageFactory.createResponse(Response.ACCEPTED, requestEvent.getRequest());
+
+                ToHeader toHeader = (ToHeader) response.getHeader(ToHeader.NAME);
+                toHeader.setTag("654321");
+                // Expires Header
+                ExpiresHeader expiresHeader = headerFactory.createExpiresHeader(3600);
+                response.addHeader(expiresHeader);
+
+                if (serverTransactionId == null) {
+                    System.out.println("SIP Rquest's Transaction is null! And get a new server Transaction now!");
+                    serverTransactionId = sipProvider.getNewServerTransaction(requestEvent.getRequest());
+                }
+                else {
+                    System.out.println("Transaction exist and transaction Id: "+ ((SIPServerTransactionImpl) serverTransactionId).getTransactionId());
+                }
+
+                Dialog tmpdialog = requestEvent.getDialog();
+                if (tmpdialog != null) {
+                    SessionCache sessionCache = (SessionCache) tmpdialog.getApplicationData();
+                    System.out.println("get session cache in ApplicationData: " + sessionCache.toString());
+
+                } else {
+                    SessionCache sessionCache = new SessionCache();
+                    sessionCache.setSessionId(UUID.randomUUID().toString());
+                    sessionCache.setCurrentState(2);
+                    sessionCache.setContents("my content with 123 abc");
+                    tmpdialog = serverTransactionId.getDialog();
+
+                    sessionCache.setTransactionId(((SIPServerTransaction)serverTransactionId).getTransactionId());
+                    tmpdialog.setApplicationData(sessionCache);
+                    System.out.println("put session cache in ApplictionData: " + sessionCache.toString());
+
+
+                }
+
+                serverTransactionId.sendResponse(response);
+
+            } catch (Exception e) {
+                System.out.println(e.toString());
+            }
         }
         // hpai>
 
@@ -1206,7 +1258,9 @@ public class JainSipHaDemo {
         try {
             sipClient = new SipClient();
             System.out.println("SipClient Started.");
-            sipClient.sendMoMessage();
+            sipClient.sendSubscribe("192.168.100.111", 5070);
+            Thread.sleep(2000);
+            sipClient.sendSubscribe("192.168.100.100", 5070);
         } catch (Exception e) {
             System.out.println("Start SipClient fail!!!" + e.toString());
         }
