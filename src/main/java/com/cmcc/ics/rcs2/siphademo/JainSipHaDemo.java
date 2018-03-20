@@ -145,6 +145,10 @@ public class JainSipHaDemo {
 
         }
 
+        public SipStack getSipStack() {
+            return sipStack;
+        }
+
         protected static final String usageString = "java "
                 + "examples.shootist.Shootist \n"
                 + ">>>> is your class path set to the root?";
@@ -293,12 +297,14 @@ public class JainSipHaDemo {
 
                     sessionCache.setTransactionId(((SIPServerTransaction)serverTransactionId).getTransactionId());
                     tmpdialog.setApplicationData(sessionCache);
+                    System.out.println("dialog id: " + tmpdialog.getDialogId());
                     System.out.println("put session cache in ApplictionData: " + sessionCache.toString());
 
 
                 }
 
                 serverTransactionId.sendResponse(response);
+                System.out.println("dialog id: " + tmpdialog.getDialogId());
 
             } catch (Exception e) {
                 System.out.println(e.toString());
@@ -1269,11 +1275,45 @@ public class JainSipHaDemo {
         System.out.println(">>>> dialogId = " + dialogId);
     }
 
+    public void testRecoverSubscribeDialog(String dialogId) throws InterruptedException {
+        BasicConfigurator.configure();
+        //Logger.getRootLogger().removeAllAppenders();
+
+        System.out.println("\r\n>>>>>>>>>> Shootist Waiting BYE <<<<<<<<<<<\r\n");
+
+        // create and start first receiver
+        Shootme shootme1 = new Shootme("shootme1", "jain-sip-ha1", 5070, true, ReplicationStrategy.ConfirmedDialog);
+        System.out.println(">>>> Start Shootme message");
+        Thread.sleep(1000);
+        shootme1.init();
+
+        Thread.sleep(5000);
+
+        Dialog tmpDialog1 = ((SipStackImpl)shootme1.getSipStack()).getDialog(dialogId);
+        SessionCache sessionCache1 =(SessionCache) tmpDialog1.getApplicationData();
+        System.out.println("SessionCache.getSessionId: " + sessionCache1.getSessionId());
+        System.out.println("SessionCache.getTransactionId: " + sessionCache1.getTransactionId());
+        System.out.println("SessionCache.getCurrentState: " + sessionCache1.getCurrentState());
+        System.out.println("SessionCache.getContents: " + sessionCache1.getContents());
+
+
+        Thread.sleep(200000);
+
+        Dialog tmpDialog2 = ((SipStackImpl)shootme1.getSipStack()).getDialog(dialogId);
+        SessionCache sessionCache2 =(SessionCache) tmpDialog1.getApplicationData();
+        System.out.println("SessionCache.getSessionId: " + sessionCache2.getSessionId());
+        System.out.println("SessionCache.getTransactionId: " + sessionCache2.getTransactionId());
+        System.out.println("SessionCache.getCurrentState: " + sessionCache2.getCurrentState());
+        System.out.println("SessionCache.getContents: " + sessionCache2.getContents());
+
+        Thread.sleep(200000);
+    }
+
     public static void main(String[] args) {
 
         JainSipHaDemo testCase = new JainSipHaDemo();
         try {
-            testCase.testMessageTransaction();
+            testCase.testRecoverSubscribeDialog("1234567890112233:654321:123456");
         } catch (Exception e) {
             System.out.println("Start testMessageTransaction fail!!!" + e.toString());
         }
