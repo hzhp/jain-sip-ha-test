@@ -1269,7 +1269,7 @@ public class JainSipHaDemo {
             System.out.println("Start SipClient fail!!!" + e.toString());
         }
 
-        Thread.sleep(200000);
+        Thread.sleep(3600000);
 
         String dialogId = shootme1.dialog.getDialogId();
         System.out.println(">>>> dialogId = " + dialogId);
@@ -1289,6 +1289,7 @@ public class JainSipHaDemo {
 
         Thread.sleep(5000);
 
+        System.out.println("time 15s");
         Dialog tmpDialog1 = ((SipStackImpl)shootme1.getSipStack()).getDialog(dialogId);
         SessionCache sessionCache1 =(SessionCache) tmpDialog1.getApplicationData();
         System.out.println("SessionCache.getSessionId: " + sessionCache1.getSessionId());
@@ -1299,21 +1300,29 @@ public class JainSipHaDemo {
 
         Thread.sleep(200000);
 
+        System.out.println("time 215s");
         Dialog tmpDialog2 = ((SipStackImpl)shootme1.getSipStack()).getDialog(dialogId);
-        SessionCache sessionCache2 =(SessionCache) tmpDialog1.getApplicationData();
+        SessionCache sessionCache2 =(SessionCache) tmpDialog2.getApplicationData();
         System.out.println("SessionCache.getSessionId: " + sessionCache2.getSessionId());
         System.out.println("SessionCache.getTransactionId: " + sessionCache2.getTransactionId());
         System.out.println("SessionCache.getCurrentState: " + sessionCache2.getCurrentState());
         System.out.println("SessionCache.getContents: " + sessionCache2.getContents());
 
-        Thread.sleep(200000);
+        Thread.sleep(2000000);
+        System.out.println("time 2215s");
+        Dialog tmpDialog3 = ((SipStackImpl)shootme1.getSipStack()).getDialog(dialogId);
+        SessionCache sessionCache4 =(SessionCache) tmpDialog3.getApplicationData();
+        System.out.println("SessionCache.getSessionId: " + sessionCache4.getSessionId());
+        System.out.println("SessionCache.getTransactionId: " + sessionCache4.getTransactionId());
+        System.out.println("SessionCache.getCurrentState: " + sessionCache4.getCurrentState());
+        System.out.println("SessionCache.getContents: " + sessionCache4.getContents());
     }
 
     public static void main(String[] args) {
 
         JainSipHaDemo testCase = new JainSipHaDemo();
         try {
-            testCase.testRecoverSubscribeDialog("1234567890112233:654321:123456");
+            testCase.testMessageTransaction();
         } catch (Exception e) {
             System.out.println("Start testMessageTransaction fail!!!" + e.toString());
         }
