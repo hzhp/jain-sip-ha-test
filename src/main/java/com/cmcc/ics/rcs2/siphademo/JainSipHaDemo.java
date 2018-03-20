@@ -1259,8 +1259,6 @@ public class JainSipHaDemo {
             sipClient = new SipClient();
             System.out.println("SipClient Started.");
             sipClient.sendSubscribe("192.168.100.111", 5070);
-            Thread.sleep(2000);
-            sipClient.sendSubscribe("192.168.100.100", 5070);
         } catch (Exception e) {
             System.out.println("Start SipClient fail!!!" + e.toString());
         }

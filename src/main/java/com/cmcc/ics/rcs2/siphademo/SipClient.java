@@ -394,7 +394,9 @@ public class SipClient implements SipListener {
             request.addHeader(expiresHeader);
 
             // Create the client transaction.
-            transaction = sipProvider.getNewClientTransaction(request);
+            if (transaction == null) {
+                transaction = sipProvider.getNewClientTransaction(request);
+            }
 
             // send the register request out
             transaction.sendRequest();
