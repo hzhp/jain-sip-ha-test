@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Properties;
 
 import javax.sip.ClientTransaction;
+import javax.sip.Dialog;
 import javax.sip.DialogTerminatedEvent;
 import javax.sip.IOExceptionEvent;
 import javax.sip.ListeningPoint;
@@ -111,6 +112,10 @@ public class SipClient implements SipListener {
     @Override
     public void processResponse(ResponseEvent responseEvent) {
         System.out.println("Receive SIP Response: " + responseEvent.getResponse().toString());
+        Dialog dialog = responseEvent.getDialog();
+        if(dialog != null) {
+            System.out.println("##--dialog id: " + dialog.getDialogId());
+        }
     }
 
     @Override

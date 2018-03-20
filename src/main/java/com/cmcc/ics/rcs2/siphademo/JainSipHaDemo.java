@@ -303,8 +303,9 @@ public class JainSipHaDemo {
 
                 }
 
+                System.out.println("##!! before send response dialog: " + tmpdialog.getDialogId());
                 serverTransactionId.sendResponse(response);
-                System.out.println("dialog id: " + tmpdialog.getDialogId());
+                System.out.println("##!! after send response dialog id: " + tmpdialog.getDialogId());
 
             } catch (Exception e) {
                 System.out.println(e.toString());
